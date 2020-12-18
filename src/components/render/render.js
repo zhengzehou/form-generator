@@ -16,9 +16,14 @@ keys.forEach(key => {
 
 function vModel(dataObject, defaultValue) {
   dataObject.props.value = defaultValue
-
   dataObject.on.input = val => {
     this.$emit('input', val)
+  }
+  dataObject.on.blur = val => {
+    this.$emit('blur', val)
+  }
+  dataObject.on.change = val => {
+    this.$emit('change', val)
   }
 }
 
@@ -116,6 +121,15 @@ export default {
 
     // 将json表单配置转化为vue render可以识别的 “数据对象（dataObject）”
     buildDataObject.call(this, confClone, dataObject)
+    if (this.conf.__config__ && this.conf.__config__.showCheckbox && this.conf.__config__.tag === 'el-table') {
+      if (children.length === this.conf.__config__.children.length) {
+        children.splice(0, 0, h('el-table-column', { props: { type: 'selection', width: '55' } }))
+      }
+    } else if (this.conf.__config__ && !this.conf.__config__.showCheckbox && this.conf.__config__.tag === 'el-table') {
+      if (children[0] && children[0].data && children[0].data.props && children[0].data.props.type === 'selection') {
+        children.splice(0, 1)
+      }
+    }
 
     return h(this.conf.__config__.tag, dataObject, children)
   }

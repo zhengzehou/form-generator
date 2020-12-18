@@ -45,7 +45,10 @@ export const inputComponents = [
     maxlength: null,
     'show-word-limit': false,
     readonly: false,
-    disabled: false
+    disabled: false,
+    on: {
+      blur: 'inputBlur'
+    }
   },
   {
     __config__: {
@@ -548,18 +551,15 @@ export const layoutComponents = [
   },
   {
     __config__: {
-      layout: 'colFormItem',
-      tagIcon: 'table',
+      label: '表格',
       tag: 'el-table',
-      document: 'https://element.eleme.cn/#/zh-CN/component/table',
+      tagIcon: 'table',
+      layout: 'tableItem',
       span: 24,
-      formId: 101,
-      renderKey: 1595761764203,
-      componentName: 'row101',
-      showLabel: true,
-      changeTag: true,
-      labelWidth: null,
-      label: '表格[开发中]',
+      type: 'page',
+      showCheckbox: false,
+      componentName: 'el-table',
+      document: 'https://element.eleme.cn/#/zh-CN/component/table',
       dataType: 'dynamic',
       method: 'get',
       dataPath: 'list',
@@ -607,23 +607,75 @@ export const layoutComponents = [
                 default: '主要按钮'
               },
               type: 'primary',
+              func: '',
               icon: 'el-icon-search',
               round: false,
-              size: 'medium'
+              size: 'mini'
             }
           ]
         },
         label: '操作'
       }]
     },
+    on: {
+      select: 'select(selection, row)',
+      'select-all': 'selectAll(selection)',
+      'selection-change': 'selectionChange(selection)',
+      toggleRowSelection: 'toggleRowSelection(row, selected)',
+      'row-click': 'tableRowClick(row, column, event)'
+    },
     data: [],
+    style: { width: '100%' }
+  },
+  {
+    __config__: {
+      layout: 'tabsItem',
+      tagIcon: 'folder',
+      tag: 'el-tabs',
+      document: 'https://element.eleme.cn/#/zh-CN/component/tabs',
+      renderKey: 1595761864203,
+      componentName: 'el-tabs',
+      label: '标签页',
+      children: [{
+        __config__: {
+          layout: 'tabPaneItem',
+          tag: 'el-tab-pane',
+          renderKey: 'etp1',
+          children: [{
+            __config__: {
+              layout: 'rowFormItem2',
+              tag: 'el-row'
+            }
+          }]
+        },
+        disabled: false,
+        name: '0',
+        label: 'tab-pane-0'
+      },
+      {
+        __config__: {
+          layout: 'tabPaneItem',
+          tag: 'el-tab-pane',
+          renderKey: 'etp2',
+          children: [{
+            __config__: {
+              layout: 'rowFormItem2',
+              tag: 'el-row'
+            }
+          }]
+        },
+        disabled: false,
+        name: '1',
+        label: 'tab-pane-1'
+      }]
+    },
+    type: 'card',
+    on: {
+      'tab-click': 'tabClick'
+    },
     directives: [{
       name: 'loading',
-      value: true
-    }],
-    border: true,
-    type: 'default',
-    justify: 'start',
-    align: 'top'
+      value: false
+    }]
   }
 ]

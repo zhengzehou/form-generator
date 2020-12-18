@@ -70,8 +70,9 @@ function buildFromBtns(scheme, type) {
 
 // span不为24的用el-col包裹
 function colWrapper(scheme, str) {
+  if (scheme.__config__.tag === 'el-row') return str
   if (someSpanIsNot24 || scheme.__config__.span !== 24) {
-    return `<el-col :span="${scheme.__config__.span}">
+    return `<el-col :span="${scheme.__config__.span ? scheme.__config__.span : 24}">
       ${str}
     </el-col>`
   }
@@ -109,6 +110,37 @@ const layouts = {
       ${children.join('\n')}
     </el-row>`
     str = colWrapper(scheme, str)
+    return str
+  },
+  rowFormItem2(scheme) {
+    const config = scheme.__config__
+    const type = scheme.type === 'default' ? '' : `type="${scheme.type}"`
+    const justify = scheme.type === 'default' ? '' : `justify="${scheme.justify}"`
+    const align = scheme.type === 'default' ? '' : `align="${scheme.align}"`
+    const gutter = scheme.gutter ? `:gutter="${scheme.gutter}"` : ''
+    const children = config.children.map(el => layouts[el.__config__.layout](el))
+    let str = `<el-row ${type} ${justify} ${align} ${gutter}>
+      ${children.join('\n')}
+    </el-row>`
+    str = colWrapper(scheme, str)
+    return str
+  },
+  tableItem(scheme) {
+    const config = scheme.__config__
+    const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
+    const str = colWrapper(scheme, tagDom)
+    return str
+  },
+  tabsItem(scheme) {
+    const config = scheme.__config__
+    const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
+    const str = colWrapper(scheme, tagDom)
+    return str
+  },
+  tabPaneItem(scheme) {
+    const config = currentItem.__config__
+    const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
+    const str = colWrapper(scheme, tagDom)
     return str
   }
 }
@@ -285,6 +317,31 @@ const tags = {
     if (child) child = `\n${child}\n` // 换行
     return `<${tag} ${ref} ${fileList} ${action} ${autoUpload} ${multiple} ${beforeUpload} ${listType} ${accept} ${name} ${disabled}>${child}</${tag}>`
   },
+  'el-table': el => {
+    const {
+      tag, width, events
+    } = attrBuilder(el)
+    const data = el.data ? `:data="d${el.__config__.renderKey}Data"` : ''
+    const props = el.props ? `:props="p${el.__config__.renderKey}Props"` : ''
+    let child = buildElTableColumn(el)
+    if (child) child = `\n${child}\n` // 换行
+    return `<${tag}  ${data} ${props} ${width} ${events}>${child}</${tag}>`
+  },
+  'el-tabs': (el, child) => {
+    const {
+      tag, vModel, events
+    } = attrBuilder(el)
+    if (!child) child = buildElTabPane(el,`${confGlobal.formModel}.${el.__vModel__}`)
+    if (child) child = `\n${child}\n` // 换行
+    return `<${tag} ${vModel} ${events}>${child}</${tag}>`
+  },
+  'el-row': (el, child) => {
+    const {
+      tag, events
+    } = attrBuilder(el)
+    if (child) child = `\n${child}\n` // 换行
+    return `<${tag} ${events}>${child}</${tag}>`
+  },
   tinymce: el => {
     const { tag, vModel, placeholder } = attrBuilder(el)
     const height = el.height ? `:height="${el.height}"` : ''
@@ -294,13 +351,26 @@ const tags = {
 }
 
 function attrBuilder(el) {
+  let events = ''
+  console.log(el.on)
+  let eventList = el.on
+  if (eventList) {
+    eventList = JSON.parse(JSON.stringify(eventList))
+    let k
+    for (k in eventList) {
+      if (eventList[k]) {
+        events += ` @${k}='${eventList[k]}'`
+      }
+    }
+  }
   return {
     tag: el.__config__.tag,
     vModel: `v-model="${confGlobal.formModel}.${el.__vModel__}"`,
     clearable: el.clearable ? 'clearable' : '',
     placeholder: el.placeholder ? `placeholder="${el.placeholder}"` : '',
     width: el.style && el.style.width ? ':style="{width: \'100%\'}"' : '',
-    disabled: el.disabled ? ':disabled=\'true\'' : ''
+    disabled: el.disabled ? ':disabled=\'true\'' : '',
+    events: `${events}`
   }
 }
 
@@ -371,6 +441,86 @@ function buildElUploadChild(scheme) {
   else list.push(`<el-button size="small" type="primary" icon="el-icon-upload">${config.buttonText}</el-button>`)
   if (config.showTip) list.push(`<div slot="tip" class="el-upload__tip">只能上传不超过 ${config.fileSize}${config.sizeUnit} 的${scheme.accept}文件</div>`)
   return list.join('\n')
+}
+
+// el-table 子级
+function buildElTableColumn(scheme) {
+  const children = []
+  const coulmns = scheme.__config__.children
+  if (scheme.__config__.showCheckbox) {
+    children.push("<el-table-column  :key='1' type='selection' width='55'></el-table-column>")
+  }
+  if (coulmns && coulmns.length) {
+    coulmns.forEach((item, index) => {
+      if (item.prop === 'opers' || item.label.indexOf('操作') >= 0) {
+        const childs = item.__config__.children
+        if (childs && childs.length > 0) {
+          const subChildren = []
+          childs.forEach((subItem, subIndex) => {
+            subChildren.push(`<el-button type='${subItem.type}' key="${subIndex}" size='${subItem.size}' icon='${subItem.icon}'>${subItem.__slot__.default ? subItem.__slot__.default : subItem.__config__.label}</el-button>`)
+          })
+          children.push(`<el-table-column  :key="${index}" label="${item.label}" prop="${item.prop}" width="${item.width ? item.width : ''}">${subChildren.join('\n')}</el-table-column>`)
+        }
+      } else {
+        children.push(`<el-table-column  :key="${index}" label="${item.label}" prop="${item.prop}" width="${item.width ? item.width : ''}"></el-table-column>`)
+      }
+    })
+  }
+  return children.join('\n')
+}
+
+// el-tabs 子级
+function buildElTabPane(scheme, vModel) {
+  const children = []
+  const paneList = scheme.__config__.children
+  if (paneList && paneList.length) {
+    paneList.forEach((item, index) => {
+      const tmpChild = []
+      // 判断是否有children
+      buildChildElement(item.__config__.children[0].__config__.children, tmpChild)
+      children.push(`<el-tab-pane  key="${index}" name="${item.name}" label="${item.label}">${tmpChild.join('\n')}</el-tab-pane>`)
+      // children.push(`<el-row  key="${index}" v-if="${vModel} == '${item.name}'"></el-row>`)
+    })
+  }
+  return children.join('\n')
+}
+
+function buildChildElement (children, list){
+  if (children && children.length > 0) {
+    children.forEach(scheme => {
+      const config = scheme.__config__
+      if (config.children && config.children.length > 0){
+        const tmpList = []
+        buildChildElement (config.children, tmpList)
+        const tagDom = tags[config.tag] ? tags[config.tag](scheme, tmpList) : null
+        const str = colWrapper(scheme, tagDom)
+        list.push(str)
+      } else {
+        const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
+        if (config.layout === 'colFormItem') {
+          let labelWidth = ''
+          let label = `label="${config.label}"`
+          if (config.labelWidth && config.labelWidth !== confGlobal.labelWidth) {
+            labelWidth = `label-width="${config.labelWidth}px"`
+          }
+          if (config.showLabel === false) {
+            labelWidth = 'label-width="0"'
+            label = ''
+          }
+          const required = !ruleTrigger[config.tag] && config.required ? 'required' : ''
+          let str = `<el-form-item ${labelWidth} ${label} prop="${scheme.__vModel__}" ${required}>
+            ${tagDom}
+          </el-form-item>`
+          str = colWrapper(scheme, str)
+          list.push(str)
+        } else {
+          const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
+          const str = colWrapper(scheme, tagDom)
+          list.push(str)
+        }
+      }
+    })
+  }
 }
 
 /**

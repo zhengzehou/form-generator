@@ -40,7 +40,7 @@
           <el-form-item v-if="activeData.__config__.label!==undefined" label="标题">
             <el-input v-model="activeData.__config__.label" placeholder="请输入标题" @input="changeRenderKey" />
           </el-form-item>
-          <el-form-item v-if="activeData.placeholder!==undefined" label="占位提示">
+          <el-form-item v-if="activeData.placeholder!==undefined && activeData.__config__.type != 'pageEle'" label="占位提示">
             <el-input v-model="activeData.placeholder" placeholder="请输入占位提示" @input="changeRenderKey" />
           </el-form-item>
           <el-form-item v-if="activeData['start-placeholder']!==undefined" label="开始占位">
@@ -261,6 +261,15 @@
             </el-radio-group>
           </el-form-item>
           <el-form-item
+            v-if="activeData.type !== undefined && activeData.__config__.tag === 'el-tabs'"
+            label="风格类型"
+          >
+            <el-select v-model="activeData.type" :style="{ width: '100%' }">
+              <el-option label="card" value="card" />
+              <el-option label="border-card" value="border-card" />
+            </el-select>
+          </el-form-item>
+          <el-form-item
             v-if="activeData.type !== undefined && activeData.__config__.tag === 'el-button'"
             label="按钮类型"
           >
@@ -338,7 +347,85 @@
             </div>
             <el-divider />
           </template>
-
+          <template v-if="'el-table'===activeData.__config__.tag">
+            <el-form-item :key="eIndex" v-for="(e, eIndex) in activeData.on" :label="eIndex">
+              <el-input v-model="activeData.on[eIndex]" />
+            </el-form-item>
+            <!-- <el-form-item label="stripe">
+              <el-switch v-model="activeData.stripe" />
+            </el-form-item> -->
+            <el-form-item label="border">
+              <el-switch v-model="activeData.border" />
+            </el-form-item>
+            <el-form-item label="显示复选框">
+              <el-switch v-model="activeData.__config__.showCheckbox" />
+            </el-form-item>
+            <el-divider>表头</el-divider>
+            <el-table :data="activeData.__config__.children">
+              <el-table-column label="顺序" width="50">
+                <template scope="scope">
+                  {{scope.$index+1}}
+                </template>
+              </el-table-column>
+              <el-table-column :prop="'label'" :label="'label'"></el-table-column>
+              <el-table-column prop="prop" label="prop"></el-table-column>
+              <el-table-column prop="prop" width="115" label="操作">
+                <template scope="scope">
+                  <el-popconfirm @confirm="deleteTableField(scope.row,scope.$index)"
+                    title="确定删除吗？" style="margin-right: 5px;"
+                  >
+                    <el-button slot="reference" type="text" size="mini">删除</el-button>
+                  </el-popconfirm>
+                  <el-button type="text" size="mini" v-if="activeData.__config__.children.length > 1 && scope.$index != 0"  @click="upTableField(scope.row,scope.$index)">上移</el-button>
+                  <el-button type="text" size="mini" v-if="activeData.__config__.children.length > 1 && scope.$index != activeData.__config__.children.length - 1"  @click="downTableField(scope.row,scope.$index)">下移</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div style="margin-left: 20px">
+              <el-button
+                style="padding-bottom: 0"
+                icon="el-icon-circle-plus-outline"
+                type="text"
+                @click="addTableHeaderItem"
+              >
+                添加表头
+              </el-button>
+            </div>
+            <el-divider>操作</el-divider>
+            <el-table :data="getTableOpers(activeData.__config__.children)">
+              <el-table-column label="顺序" width="50">
+                <template scope="scope">
+                  {{scope.$index+1}}
+                </template>
+              </el-table-column>
+              <el-table-column  label="按钮">
+                <template scope="scope">
+                  <el-button :type="scope.row.type" :icon='scope.row.icon' :size="scope.row.size">{{scope.row.__slot__.default}}</el-button>
+                </template>
+              </el-table-column>
+              <el-table-column prop="prop" width="115" label="操作">
+                <template scope="scope">
+                  <el-popconfirm @confirm="deleteTableOperBtn(scope.row,scope.$index)"
+                    title="确定删除吗？" style="margin-right: 5px;"
+                  >
+                    <el-button slot="reference" type="text" size="mini">删除</el-button>
+                  </el-popconfirm>
+                  <el-button type="text" size="mini" v-if="getTableOpers(activeData.__config__.children).length > 1 && scope.$index != 0"  @click="upTableOperBtn(scope.row,scope.$index)">上移</el-button>
+                  <el-button type="text" size="mini" v-if="getTableOpers(activeData.__config__.children) > 1 && scope.$index != getTableOpers(activeData.__config__.children).length - 1" @click="downTableOperBtn(scope.row, scope.$index)">下移</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div style="margin-left: 20px">
+              <el-button
+                style="padding-bottom: 0"
+                icon="el-icon-circle-plus-outline"
+                type="text"
+                @click="addTableOperBtnItem"
+              >
+                添加操作
+              </el-button>
+            </div>
+          </template>
           <template v-if="['el-cascader', 'el-table'].includes(activeData.__config__.tag)">
             <el-divider>选项</el-divider>
             <el-form-item v-if="activeData.__config__.dataType" label="数据类型">
@@ -374,13 +461,13 @@
                   </el-select>
                 </el-input>
               </el-form-item>
-              <el-form-item label="数据位置">
+              <!-- <el-form-item label="数据位置">
                 <el-input
                   v-model="activeData.__config__.dataPath"
                   placeholder="请输入数据位置"
                   @blur="$emit('fetch-data', activeData)"
                 />
-              </el-form-item>
+              </el-form-item> -->
 
               <template v-if="activeData.props && activeData.props.props">
                 <el-form-item label="标签键名">
@@ -397,14 +484,14 @@
 
             <!-- 级联选择静态树 -->
             <el-tree
-              v-if="activeData.__config__.dataType === 'static'"
+              v-if="activeData.__config__.dataType === 'static' && activeData.options"
               draggable
               :data="activeData.options"
               node-key="id"
               :expand-on-click-node="false"
               :render-content="renderContent"
             />
-            <div v-if="activeData.__config__.dataType === 'static'" style="margin-left: 20px">
+            <div v-if="activeData.__config__.dataType === 'static' && activeData.options" style="margin-left: 20px">
               <el-button
                 style="padding-bottom: 0"
                 icon="el-icon-circle-plus-outline"
@@ -414,7 +501,38 @@
                 添加父级
               </el-button>
             </div>
+            <!-- 表格静态数据-->
+            <el-input v-model="staticTextData" @blur="checkStaticData" type="textarea" placeholder="输入表格静态测试数据"></el-input>
             <el-divider />
+          </template>
+          <template v-if="'el-tabs' === activeData.__config__.tag">
+            <el-divider>标签</el-divider>
+            <draggable
+              :list="activeData.__config__.children"
+              :animation="340"
+              group="selectItem"
+              handle=".option-drag"
+            >
+              <div v-for="(item, index) in activeData.__config__.children" :key="index" class="select-item">
+                <div class="select-line-icon option-drag">
+                  <i class="el-icon-s-operation" />
+                </div>
+                <el-input v-model="item.label" placeholder="标签名" size="small" />
+                <div class="close-btn select-line-icon" @click="activeData.__config__.children.splice(index, 1)">
+                  <i class="el-icon-remove-outline" />
+                </div>
+              </div>
+            </draggable>
+            <div style="margin-left: 20px;">
+              <el-button
+                style="padding-bottom: 0"
+                icon="el-icon-circle-plus-outline"
+                type="text"
+                @click="addTabPaneItem"
+              >
+                添加标签
+              </el-button>
+            </div>
           </template>
 
           <el-form-item v-if="activeData.__config__.optionType !== undefined" label="选项样式">
@@ -643,7 +761,9 @@
       </el-scrollbar>
     </div>
 
-    <treeNode-dialog :visible.sync="dialogVisible" title="添加选项" @commit="addNode" />
+    <treeNode-dialog v-if="dialogVisible" :visible.sync="dialogVisible" title="添加选项" @commit="addNode" />
+    <treeNode-dialog  v-if="dialogTableHeaderVisible" :visible.sync="dialogTableHeaderVisible" title="添加表头" :key-name="'列名'" :value-name="'属性名'" :select="false" @commit="addTableHeader" />
+    <button-dialog  v-if="dialogTableOperBtnVisible" :visible.sync="dialogTableOperBtnVisible" title="添加表操作" @commit="addTableOperBtn" />
     <icons-dialog :visible.sync="iconsVisible" :current="activeData[currentIconModel]" @select="setIcon" />
   </div>
 </template>
@@ -651,12 +771,13 @@
 <script>
 import { isArray } from 'util'
 import TreeNodeDialog from '@/views/index/TreeNodeDialog'
+import ButtonDialog from '@/views/index/ButtonDialog'
 import { isNumberStr } from '@/utils/index'
 import IconsDialog from './IconsDialog'
 import {
   inputComponents, selectComponents, layoutComponents
 } from '@/components/generator/config'
-import { saveFormConf } from '@/utils/db'
+import { saveFormConf, getIdGlobal } from '@/utils/db'
 
 const dateTimeFormat = {
   date: 'yyyy-MM-dd',
@@ -675,16 +796,21 @@ const needRerenderList = ['tinymce']
 export default {
   components: {
     TreeNodeDialog,
-    IconsDialog
+    IconsDialog,
+    ButtonDialog
   },
   props: ['showField', 'activeData', 'formConf'],
   data() {
     return {
       currentTab: 'field',
+      idGlobal: getIdGlobal(),
       currentNode: null,
+      dialogTableHeaderVisible: false,
+      dialogTableOperBtnVisible: false,
       dialogVisible: false,
       iconsVisible: false,
       currentIconModel: null,
+      staticTextData: '',
       dateTypeOptions: [
         {
           label: '日(date)',
@@ -838,6 +964,35 @@ export default {
         value: ''
       })
     },
+    addTabPaneItem() {
+      // 获取最大tab的编号
+      let maxName = '0'
+      this.activeData.__config__.children.forEach(item => {
+        if (Number(maxName) <= Number(item.name)) {
+          maxName = item.name
+        }
+      })
+      maxName = Number(maxName) + 1
+      ++this.idGlobal
+      this.activeData.__config__.children.push({
+        __config__: {
+          layout: 'tabPaneItem',
+          tag: 'el-tab-pane',
+          renderKey: `tab-pane-${maxName}`,
+          children: [{
+            __config__: {
+              layout: 'rowFormItem2',
+              componentName: `row${this.idGlobal}`,
+              renderKey: `row${this.idGlobal}`,
+              children: [],
+              tag: 'el-row'
+            }
+          }]
+        },
+        name: `${maxName}`,
+        label: `tab-pane-${maxName}`
+      })
+    },
     addTreeItem() {
       ++this.idGlobal
       this.dialogVisible = true
@@ -968,6 +1123,103 @@ export default {
       if (needRerenderList.includes(this.activeData.__config__.tag)) {
         this.activeData.__config__.renderKey = +new Date()
       }
+    },
+    checkStaticData() {
+      if (this.staticTextData) {
+        try {
+          const json = JSON.parse(this.staticTextData)
+          if (this.staticTextData.indexOf('[') === 0) {
+            this.activeData.data = json
+          }
+        } catch (e) {
+          this.$notify({
+            title: '提示',
+            type: 'error',
+            message: `数据格式有误，JSON转换异常,${e}`,
+            duration: 5000
+          })
+        }
+      }
+    },
+    addTableHeaderItem() {
+      this.dialogTableHeaderVisible = true
+    },
+    addTableOperBtnItem() {
+      this.dialogTableOperBtnVisible = true
+    },
+    addTableHeader(data) {
+      ++this.idGlobal
+      const key = `eltc${this.idGlobal}`
+      const field = {
+        __config__: {
+          layout: 'raw',
+          tag: 'el-table-column',
+          renderKey: key
+        },
+        prop: data.value,
+        label: data.label
+      }
+      this.activeData.__config__.children.splice(this.activeData.__config__.children.length, 0, field)
+    },
+    deleteTableField(row, index) {
+      this.activeData.__config__.children.splice(index, 1)
+      console.log(this.activeData)
+    },
+    upTableField(row, index) {
+      const tmp = this.activeData.__config__.children.splice(index, 1)
+      this.activeData.__config__.children.splice(index - 1, 0, tmp[0])
+      console.log(this.activeData)
+    },
+    downTableField(row, index) {
+      const tmp = this.activeData.__config__.children.splice(index, 1)
+      this.activeData.__config__.children.splice(index + 1, 0, tmp[0])
+      console.log(this.activeData)
+    },
+    addTableOperBtn(data) {
+      ++this.idGlobal
+      const key = `eltcb${this.idGlobal}`
+      const field = {
+        __config__: {
+          label: '按钮',
+          tag: 'el-button',
+          tagIcon: 'button',
+          layout: 'raw',
+          renderKey: key
+        },
+        __slot__: {
+          default: data.label
+        },
+        type: data.type,
+        func: data.func,
+        icon: data.icon,
+        round: false,
+        size: data.size
+      }
+      const opColumn = this.activeData.__config__.children.filter(it => it.prop === 'oper' || it.label.indexOf('操作') !== -1)
+      opColumn[0].__config__.children.splice(opColumn[0].__config__.children.length, 0, field)
+    },
+    deleteTableOperBtn(row, index) {
+      this.activeData.__config__.children.splice(index, 1)
+      console.log(this.activeData)
+    },
+    upTableOperBtn(row, index) {
+      const tmp = this.activeData.__config__.children.splice(index, 1)
+      this.activeData.__config__.children.splice(index - 1, 0, tmp[0])
+      console.log(this.activeData)
+    },
+    downTableOperBtn(row, index) {
+      const tmp = this.activeData.__config__.children.splice(index, 1)
+      this.activeData.__config__.children.splice(index + 1, 0, tmp[0])
+      console.log(this.activeData)
+    },
+    getTableOpers(children) {
+      if (children) {
+        const opColumn = children.filter(it => it.prop === 'oper' || it.label.indexOf('操作') !== -1)
+        if (opColumn) {
+          return opColumn[0].__config__.children
+        }
+      }
+      return []
     }
   }
 }

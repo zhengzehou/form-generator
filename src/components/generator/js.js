@@ -20,7 +20,8 @@ const inheritAttrs = {
  */
 export function makeUpJs(formConfig, type) {
   confGlobal = formConfig = deepClone(formConfig)
-  const dataList = []
+  const formDataList = []
+  const otherDataList = []
   const ruleList = []
   const optionsList = []
   const propsList = []
@@ -29,13 +30,14 @@ export function makeUpJs(formConfig, type) {
   const created = []
 
   formConfig.fields.forEach(el => {
-    buildAttributes(el, dataList, ruleList, optionsList, methodList, propsList, uploadVarList, created)
+    buildAttributes(el, formDataList, otherDataList, ruleList, optionsList, methodList, propsList, uploadVarList, created)
   })
 
   const script = buildexport(
     formConfig,
     type,
-    dataList.join('\n'),
+    formDataList.join('\n'),
+    otherDataList.join('\n'),
     ruleList.join('\n'),
     optionsList.join('\n'),
     uploadVarList.join('\n'),
@@ -48,10 +50,11 @@ export function makeUpJs(formConfig, type) {
 }
 
 // 构建组件属性
-function buildAttributes(scheme, dataList, ruleList, optionsList, methodList, propsList, uploadVarList, created) {
+function buildAttributes(scheme, formDataList, otherDataList, ruleList, optionsList, methodList, propsList, uploadVarList, created) {
   const config = scheme.__config__
   const slot = scheme.__slot__
-  buildData(scheme, dataList)
+  buildData(scheme, formDataList, 'form')
+  buildData(scheme, otherDataList, 'other')
   buildRules(scheme, ruleList)
 
   // 特殊处理options属性
@@ -64,6 +67,10 @@ function buildAttributes(scheme, dataList, ruleList, optionsList, methodList, pr
       buildOptionMethod(methodName, model, methodList, scheme)
       callInCreated(methodName, created)
     }
+  }
+  // 特殊处理on属性
+  if (scheme.on) {
+    buildEventMethod(methodList, scheme)
   }
 
   // 处理props
@@ -87,7 +94,7 @@ function buildAttributes(scheme, dataList, ruleList, optionsList, methodList, pr
   // 构建子级组件属性
   if (config.children) {
     config.children.forEach(item => {
-      buildAttributes(item, dataList, ruleList, optionsList, methodList, propsList, uploadVarList, created)
+      buildAttributes(item, formDataList, otherDataList, ruleList, optionsList, methodList, propsList, uploadVarList, created)
     })
   }
 }
@@ -99,6 +106,7 @@ function callInCreated(methodName, created) {
 
 // 混入处理函数
 function mixinMethod(type) {
+  // const methodss = sessionStorage.getItem('vue-local-methods')
   const list = []; const
     minxins = {
       file: confGlobal.formBtns ? {
@@ -135,16 +143,24 @@ function mixinMethod(type) {
       list.push(methods[key])
     })
   }
+  // if (methodss) {
+  //   list.push(JSON.parse(methodss))
+  // }
 
   return list
 }
 
 // 构建data
-function buildData(scheme, dataList) {
+function buildData(scheme, dataList, type) {
   const config = scheme.__config__
-  if (scheme.__vModel__ === undefined) return
-  const defaultValue = JSON.stringify(config.defaultValue)
-  dataList.push(`${scheme.__vModel__}: ${defaultValue},`)
+  if (scheme.__vModel__ && type === 'form') {
+    const defaultValue = JSON.stringify(config.defaultValue)
+    dataList.push(`${scheme.__vModel__}: ${defaultValue},`)
+  }
+  if (scheme.data && type === 'other') {
+    const data = JSON.stringify(scheme.data)
+    dataList.push(`d${scheme.__config__.renderKey}Data: ${data},`)
+  }
 }
 
 // 构建校验规则
@@ -184,8 +200,14 @@ function buildOptions(scheme, optionsList) {
 }
 
 function buildProps(scheme, propsList) {
-  const str = `${scheme.__vModel__}Props: ${JSON.stringify(scheme.props.props)},`
-  propsList.push(str)
+  if (scheme.__vModel__) {
+    const str = `${scheme.__vModel__}Props: ${JSON.stringify(scheme.props.props)},`
+    propsList.push(str)
+  }
+  // if (scheme.props) {
+  //   const str = `${scheme.__config__.renderKey}Props: ${JSON.stringify(scheme.props)},`
+  //   propsList.push(str)
+  // }
 }
 
 // el-upload的BeforeUpload
@@ -237,9 +259,29 @@ function buildOptionMethod(methodName, model, methodList, scheme) {
   },`
   methodList.push(str)
 }
+function buildEventMethod(methodList, scheme) {
+  const config = scheme.__config__
+  // TODO 处理编辑时，已经完善的方法，不做替换
+  const hasFinishedMethod = []
+  if (scheme.on) {
+    for (const a in scheme.on) {
+      let str
+      if (hasFinishedMethod.indexOf(a) === -1) {
+        if (scheme.on[a].indexOf('(') === -1) {
+          str = `${scheme.on[a]}() {
+          },`
+        } else {
+          str = `${scheme.on[a]}() {
+          },`
+        }
+        methodList.push(str)
+      }
+    }
+  }
+}
 
 // js整体拼接
-function buildexport(conf, type, data, rules, selectOptions, uploadVar, props, methods, created) {
+function buildexport(conf, type, formData, data, rules, selectOptions, uploadVar, props, methods, created) {
   const str = `${exportDefault}{
   ${inheritAttrs[type]}
   components: {},
@@ -247,7 +289,7 @@ function buildexport(conf, type, data, rules, selectOptions, uploadVar, props, m
   data () {
     return {
       ${conf.formModel}: {
-        ${data}
+        ${formData}
       },
       ${conf.formRules}: {
         ${rules}
@@ -255,6 +297,7 @@ function buildexport(conf, type, data, rules, selectOptions, uploadVar, props, m
       ${uploadVar}
       ${selectOptions}
       ${props}
+      ${data}
     }
   },
   computed: {},

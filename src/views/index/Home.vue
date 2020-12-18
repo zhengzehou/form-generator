@@ -240,7 +240,7 @@ export default {
   },
   mounted() {
     if (Array.isArray(drawingListInDB) && drawingListInDB.length > 0) {
-      this.drawingList = drawingListInDB
+       this.drawingList = drawingListInDB
     } else {
       this.drawingList = drawingDefalut
     }
@@ -335,10 +335,10 @@ export default {
     createIdAndKey(item) {
       const config = item.__config__
       config.formId = ++this.idGlobal
-      config.renderKey = `${config.formId}${+new Date()}` // 改变renderKey后可以实现强制更新组件
-      if (config.layout === 'colFormItem') {
+      config.renderKey = `${config.formId ? config.formId : 'el_'}${+new Date()}` // 改变renderKey后可以实现强制更新组件
+      if (config.layout === 'colFormItem' || config.layout === 'tabsItem') {
         item.__vModel__ = `field${this.idGlobal}`
-      } else if (config.layout === 'rowFormItem') {
+      } else if (config.layout === 'rowFormItem' || config.layout === 'rowFormItem2') {
         config.componentName = `row${this.idGlobal}`
         !Array.isArray(config.children) && (config.children = [])
         delete config.label // rowFormItem无需配置label属性

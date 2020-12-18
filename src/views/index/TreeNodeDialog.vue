@@ -18,7 +18,7 @@
         >
           <el-col :span="24">
             <el-form-item
-              label="选项名"
+              :label="keyName ? keyName : '选项名'"
               prop="label"
             >
               <el-input
@@ -30,7 +30,7 @@
           </el-col>
           <el-col :span="24">
             <el-form-item
-              label="选项值"
+              :label="valueName ? valueName : '选项值'"
               prop="value"
             >
               <el-input
@@ -38,7 +38,7 @@
                 placeholder="请输入选项值"
                 clearable
               >
-                <el-select
+                <el-select v-if="select"
                   slot="append"
                   v-model="dataType"
                   :style="{width: '100px'}"
@@ -79,7 +79,20 @@ const id = getTreeNodeId()
 export default {
   components: {},
   inheritAttrs: false,
-  props: [],
+  props: {
+    select: {
+      type: Boolean,
+      default: true
+    },
+    keyName: {
+      type: String,
+      default: ''
+    },
+    valueName: {
+      type: String,
+      default: ''
+    }
+  },
   data() {
     return {
       id,
