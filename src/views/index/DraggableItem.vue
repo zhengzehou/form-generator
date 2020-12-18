@@ -35,6 +35,10 @@ const layouts = {
           label={config.showLabel ? config.label : ''} required={config.required}>
           <render key={config.renderKey} conf={currentItem} onInput={ event => {
             this.$set(config, 'defaultValue', event)
+          }}
+          onChange={ event => {
+            debugger
+            console.log(event)
           }}>
             {child}
           </render>
@@ -104,7 +108,10 @@ const layouts = {
       <el-col span={config.span} class={className}
         nativeOnClick={event => { activeItem(currentItem); event.stopPropagation() }}>
         <div class='el-form-item'>
-          <render key={config.renderKey} conf={currentItem}>
+          <render key={config.renderKey} conf={currentItem} onSelect={ event => {
+            debugger
+            console.log(event)
+          }}>
           {child}
           </render>
         </div>

@@ -25,6 +25,9 @@ function vModel(dataObject, defaultValue) {
   dataObject.on.change = val => {
     this.$emit('change', val)
   }
+  dataObject.on.select = val => {
+    this.$emit('select', val)
+  }
 }
 
 function mountSlotFiles(h, confClone, children) {

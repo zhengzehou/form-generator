@@ -240,7 +240,7 @@ export default {
   },
   mounted() {
     if (Array.isArray(drawingListInDB) && drawingListInDB.length > 0) {
-       this.drawingList = drawingListInDB
+      this.drawingList = drawingListInDB
     } else {
       this.drawingList = drawingDefalut
     }

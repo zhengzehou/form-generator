@@ -136,12 +136,6 @@ const layouts = {
     const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
     const str = colWrapper(scheme, tagDom)
     return str
-  },
-  tabPaneItem(scheme) {
-    const config = currentItem.__config__
-    const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
-    const str = colWrapper(scheme, tagDom)
-    return str
   }
 }
 
@@ -331,7 +325,7 @@ const tags = {
     const {
       tag, vModel, events
     } = attrBuilder(el)
-    if (!child) child = buildElTabPane(el,`${confGlobal.formModel}.${el.__vModel__}`)
+    if (!child) child = buildElTabPane(el, `${confGlobal.formModel}.${el.__vModel__}`)
     if (child) child = `\n${child}\n` // 换行
     return `<${tag} ${vModel} ${events}>${child}</${tag}>`
   },
@@ -485,13 +479,13 @@ function buildElTabPane(scheme, vModel) {
   return children.join('\n')
 }
 
-function buildChildElement (children, list){
+function buildChildElement(children, list) {
   if (children && children.length > 0) {
     children.forEach(scheme => {
       const config = scheme.__config__
-      if (config.children && config.children.length > 0){
+      if (config.children && config.children.length > 0) {
         const tmpList = []
-        buildChildElement (config.children, tmpList)
+        buildChildElement(config.children, tmpList)
         const tagDom = tags[config.tag] ? tags[config.tag](scheme, tmpList) : null
         const str = colWrapper(scheme, tagDom)
         list.push(str)
@@ -514,7 +508,6 @@ function buildChildElement (children, list){
           str = colWrapper(scheme, str)
           list.push(str)
         } else {
-          const tagDom = tags[config.tag] ? tags[config.tag](scheme) : null
           const str = colWrapper(scheme, tagDom)
           list.push(str)
         }

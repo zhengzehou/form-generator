@@ -162,6 +162,135 @@ export default {
             on: {
               click: 'clickTestButton1'
             }
+          },
+          {
+            __config__: {
+              label: '表格',
+              tag: 'el-table',
+              tagIcon: 'table',
+              layout: 'tableItem',
+              span: 24,
+              type: 'page',
+              showCheckbox: true,
+              componentName: 'el-table',
+              document: 'https://element.eleme.cn/#/zh-CN/component/table',
+              dataType: 'dynamic',
+              method: 'get',
+              dataPath: 'list',
+              dataConsumer: 'data',
+              url: 'https://www.fastmock.site/mock/f8d7a54fb1e60561e2f720d5a810009d/fg/tableData',
+              children: [{
+                __config__: {
+                  layout: 'raw',
+                  tag: 'el-table-column',
+                  renderKey: 15957617660153
+                },
+                prop: 'date',
+                label: '日期'
+              }, {
+                __config__: {
+                  layout: 'raw',
+                  tag: 'el-table-column',
+                  renderKey: 15957617660152
+                },
+                prop: 'address',
+                label: '地址'
+              }, {
+                __config__: {
+                  layout: 'raw',
+                  tag: 'el-table-column',
+                  renderKey: 15957617660151
+                },
+                prop: 'name',
+                label: '名称'
+              }, {
+                __config__: {
+                  layout: 'raw',
+                  tag: 'el-table-column',
+                  renderKey: 1595774496335,
+                  children: [
+                    {
+                      __config__: {
+                        label: '按钮',
+                        tag: 'el-button',
+                        tagIcon: 'button',
+                        layout: 'raw',
+                        renderKey: 1595779809901
+                      },
+                      __slot__: {
+                        default: '主要按钮'
+                      },
+                      type: 'primary',
+                      func: '',
+                      icon: 'el-icon-search',
+                      round: false,
+                      size: 'mini'
+                    }
+                  ]
+                },
+                label: '操作'
+              }]
+            },
+            on: {
+              select: 'select(selection, row)',
+              'select-all': 'selectAll(selection)',
+              'selection-change': 'selectionChange(selection)',
+              toggleRowSelection: 'toggleRowSelection(row, selected)',
+              'row-click': 'tableRowClick(row, column, event)'
+            },
+            data: [{"date":"2020-09-09","name":"JakHuang","address":"上海市普陀区金沙江路 2020 弄"}],
+            style: { width: '100%' }
+          },
+          {
+            __config__: {
+              layout: 'tabsItem',
+              tagIcon: 'folder',
+              tag: 'el-tabs',
+              document: 'https://element.eleme.cn/#/zh-CN/component/tabs',
+              renderKey: 1595761864203,
+              componentName: 'el-tabs',
+              label: '标签页',
+              children: [{
+                __config__: {
+                  layout: 'tabPaneItem',
+                  tag: 'el-tab-pane',
+                  renderKey: 'etp1',
+                  children: [{
+                    __config__: {
+                      layout: 'rowFormItem2',
+                      tag: 'el-row'
+                    }
+                  }]
+                },
+                disabled: false,
+                name: '0',
+                label: 'tab-pane-0'
+              },
+              {
+                __config__: {
+                  layout: 'tabPaneItem',
+                  tag: 'el-tab-pane',
+                  renderKey: 'etp2',
+                  children: [{
+                    __config__: {
+                      layout: 'rowFormItem2',
+                      tag: 'el-row'
+                    }
+                  }]
+                },
+                disabled: false,
+                name: '1',
+                label: 'tab-pane-1'
+              }]
+            },
+            type: 'card',
+            on: {
+              'tab-click': 'tabClick'
+            },
+            directives: [{
+              name: 'loading',
+              value: false
+            }]
           }
         ],
         __methods__: {

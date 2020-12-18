@@ -44,6 +44,54 @@ const layouts = {
         </el-row>
       </el-col>
     )
+  },
+  rowFormItem2(h, scheme) {
+    let child = renderChildren.apply(this, arguments)
+    if (scheme.type === 'flex') {
+      child = <el-row type={scheme.type} justify={scheme.justify} align={scheme.align}>
+              {child}
+            </el-row>
+    }
+    return (
+      <el-col span={scheme.span}>
+        <el-row gutter={scheme.gutter}>
+          {child}
+        </el-row>
+      </el-col>
+    )
+  },
+  raw(h, scheme) {
+    const config = scheme.__config__
+    const child = renderChildren.apply(this, arguments)
+    return <render key={config.renderKey} conf={scheme} onInput={ event => {
+      this.$set(config, 'defaultValue', event)
+    }}>
+      {child}
+    </render>
+  },
+  tableItem(h, scheme) {
+    const config = scheme.__config__
+    const child = renderChildren.apply(this, arguments)
+    return (
+      <render key={config.renderKey} conf={scheme}>
+        {child}
+      </render>
+    )
+  },
+  tabsItem(h, scheme) {
+    const config = scheme.__config__
+    const child = renderChildren.apply(this, arguments)
+    return (
+      <render key={config.renderKey} conf={scheme} onInput={ event => {
+        this.$set(config, 'defaultValue', event)
+      }}>
+        {child}
+      </render>
+    )
+  },
+  tabPaneItem(h, scheme) {
+    const child = renderChildren.apply(this, arguments)
+    return h('el-tab-pane', { props: { name: scheme.name, label: scheme.label } }, child)
   }
 }
 

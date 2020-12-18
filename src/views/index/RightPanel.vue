@@ -949,6 +949,16 @@ export default {
         saveFormConf(val)
       },
       deep: true
+    },
+    'activeData.data': {
+      handler(val) {
+        if (this.activeData.data) {
+          this.staticTextData = JSON.stringify(this.activeData.data)
+        } else {
+          this.staticTextData = ''
+        }
+      },
+      deep: true
     }
   },
   methods: {
